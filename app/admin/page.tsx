@@ -94,10 +94,10 @@ export default async function AdminPage() {
       messages={filteredMessages}
       adminName={session.user.name}
       role={role}
-      userClassId={userClassId}
+      userClassId={userClassId || undefined}
       classSettings={classSettings}
       allClasses={allClasses}
-      isOwnClass={isOwnClass}
+      isOwnClass={!!isOwnClass}
     />
   );
 }
