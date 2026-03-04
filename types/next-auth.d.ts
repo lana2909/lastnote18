@@ -1,6 +1,6 @@
 
-import 'next-auth';
-import 'next-auth/jwt';
+import NextAuth from 'next-auth';
+import { JWT } from 'next-auth/jwt';
 
 declare module 'next-auth' {
   interface User {
@@ -10,21 +10,13 @@ declare module 'next-auth' {
     role: string;
     isUnlocked: boolean;
     isSuperAdmin: boolean;
-    classId?: string;
-    themeId?: string;
+    classId?: string | null;
+    themeId?: string | null;
+    originalClassId?: string | null;
   }
 
   interface Session {
-    user: {
-      id: string;
-      name: string;
-      username: string;
-      role: string;
-      isUnlocked: boolean;
-      isSuperAdmin: boolean;
-      classId?: string;
-      themeId?: string;
-    };
+    user: User;
   }
 }
 
@@ -33,9 +25,10 @@ declare module 'next-auth/jwt' {
     id: string;
     role: string;
     isUnlocked: boolean;
-    isSuperAdmin: boolean;
     username: string;
-    classId?: string;
-    themeId?: string;
+    isSuperAdmin: boolean;
+    classId?: string | null;
+    themeId?: string | null;
+    originalClassId?: string | null;
   }
 }
