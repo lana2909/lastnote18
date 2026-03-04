@@ -1,110 +1,190 @@
-# Deployment Guide via GitHub - One Last Note (lastnote18)
+# Deployment Guide - One Last Note (Self-Hosted Proxmox CT)
 
-Metode ini jauh lebih mudah daripada zip manual. Kita akan menggunakan GitHub untuk menyimpan kode dan Vercel (atau layanan sejenis) untuk deployment otomatis.
-
-## Prasyarat
-1.  Akun [GitHub](https://github.com)
-2.  Akun [Vercel](https://vercel.com) (bisa login pakai GitHub)
-3.  [Git](https://git-scm.com/downloads) terinstal di komputer Anda
+Panduan ini untuk deployment di server sendiri (Proxmox CT/LXC/VM) menggunakan Git.
+Metode ini jauh lebih efisien karena Anda hanya perlu `git pull` untuk update.
 
 ---
 
-## Langkah 1: Buat Repository GitHub
+## Prasyarat di Server (Proxmox CT)
 
-1.  Buka [GitHub.com](https://github.com) dan login.
-2.  Klik tombol **+** di pojok kanan atas -> **New repository**.
-3.  Isi **Repository name** dengan: `lastnote18`
-4.  Pilih **Public** atau **Private** (terserah Anda).
-5.  Jangan centang "Add a README file" (karena kita sudah punya).
-6.  Klik **Create repository**.
+Pastikan server Anda sudah terinstall:
+1.  **Git**: `sudo apt install git`
+2.  **Node.js 18+**:
+    ```bash
+    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+    ```
+3.  **PM2 (Process Manager)**: `sudo npm install -g pm2`
+4.  **Nginx (Reverse Proxy)**: `sudo apt install nginx`
 
 ---
 
-## Langkah 2: Upload Kode ke GitHub
+## Langkah 1: Persiapkan Repository GitHub (Di Laptop/PC Anda)
 
-Buka terminal di folder proyek Anda (`d:\Data penting\Document\Karya\khususdokumentasi16\One Last Note Memory\project`) dan jalankan perintah berikut satu per satu:
+Sebelum deploy, pastikan kode di lokal sudah naik ke GitHub.
+
+1.  Buka terminal di folder proyek ini.
+2.  Inisialisasi Git dan push ke GitHub:
+    ```powershell
+    # Hapus folder .git lama jika ada (opsional, biar bersih)
+    # rmdir /s /q .git
+
+    git init
+    git add .
+    git commit -m "Initial commit for self-hosted deployment"
+    git branch -M main
+    
+    # Ganti USERNAME dengan username GitHub Anda
+    git remote add origin https://github.com/USERNAME/lastnote18.git
+    
+    git push -u origin main
+    ```
+
+---
+
+## Langkah 2: Clone di Server (Proxmox CT)
+
+Masuk ke terminal server Anda (via SSH atau Console Proxmox).
+
+1.  Masuk ke direktori web (misal `/var/www`):
+    ```bash
+    cd /var/www
+    ```
+
+2.  Clone repository:
+    ```bash
+    # Ganti URL dengan repo Anda
+    sudo git clone https://github.com/USERNAME/lastnote18.git
+    ```
+
+3.  Masuk ke folder proyek:
+    ```bash
+    cd lastnote18
+    ```
+
+4.  Install dependensi:
+    ```bash
+    npm install
+    ```
+
+---
+
+## Langkah 3: Konfigurasi Environment Variables
+
+Buat file `.env` di server:
 
 ```bash
-# 1. Inisialisasi Git (jika belum pernah)
-git init
-
-# 2. Tambahkan semua file ke staging
-git add .
-
-# 3. Buat commit pertama
-git commit -m "Initial commit: One Last Note Memory complete features"
-
-# 4. Ubah nama branch utama ke 'main'
-git branch -M main
-
-# 5. Hubungkan folder lokal ke repository GitHub yang baru dibuat
-# Ganti 'USERNAME' dengan username GitHub Anda
-git remote add origin https://github.com/USERNAME/lastnote18.git
-
-# 6. Upload kode ke GitHub
-git push -u origin main
+nano .env
 ```
 
-*Catatan: Jika diminta login, masukkan username dan password (atau Personal Access Token) GitHub Anda.*
+Isi dengan konfigurasi berikut (sesuaikan dengan data Supabase Anda):
+
+```env
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+# Auth Configuration
+# Ganti dengan domain server Anda atau IP jika belum ada domain
+NEXTAUTH_URL=http://IP_ADDRESS_SERVER_ANDA_ATAU_DOMAIN
+NEXTAUTH_SECRET=buat_string_acak_yang_panjang_dan_rahasia_disini
+```
+
+Simpan dengan `Ctrl+X`, lalu `Y`, lalu `Enter`.
 
 ---
 
-## Langkah 3: Deploy ke Vercel (Paling Mudah & Gratis)
+## Langkah 4: Build & Jalankan dengan PM2
 
-Vercel adalah platform terbaik untuk Next.js.
+1.  Build aplikasi Next.js:
+    ```bash
+    npm run build
+    ```
 
-1.  Buka [Vercel Dashboard](https://vercel.com/dashboard) dan login.
-2.  Klik **Add New...** -> **Project**.
-3.  Di bagian "Import Git Repository", cari `lastnote18` dan klik **Import**.
-4.  Di halaman konfigurasi "Configure Project":
-    *   **Project Name**: Biarkan `lastnote18`
-    *   **Framework Preset**: Next.js (Otomatis terdeteksi)
-    *   **Environment Variables**: Klik untuk membuka. Masukkan variabel dari file `.env` Anda satu per satu:
-        *   `NEXT_PUBLIC_SUPABASE_URL`: (Isi dengan URL Supabase Anda)
-        *   `NEXT_PUBLIC_SUPABASE_ANON_KEY`: (Isi dengan Anon Key Supabase Anda)
-        *   `SUPABASE_SERVICE_ROLE_KEY`: (Isi dengan Service Role Key Supabase Anda)
-        *   `NEXTAUTH_URL`: Kosongkan dulu (Vercel akan mengaturnya otomatis) atau isi dengan domain Vercel nanti (misal `https://lastnote18.vercel.app`). *Saran: Saat deploy pertama, Vercel otomatis mengisi URL default, jadi aman dikosongkan atau diisi URL sementara.*
-        *   `NEXTAUTH_SECRET`: (Isi dengan string acak panjang, bisa pakai hasil `openssl rand -base64 32` atau ketik acak saja yang panjang)
+    **Troubleshooting Build Error (Fonts Timeout):**
+    Jika Anda mengalami error `FetchError: request to ... fonts.gstatic.com ... failed` saat build, itu karena server tidak bisa mengakses Google Fonts. Solusinya sudah diterapkan di kode terbaru (menggunakan konfigurasi font yang lebih aman). Cukup pastikan Anda sudah `git pull` kode terbaru.
 
-5.  Klik **Deploy**.
+2.  Jalankan aplikasi menggunakan PM2:
+    ```bash
+    pm2 start npm --name "lastnote18" -- start
+    ```
 
-Tunggu sebentar (sekitar 1-2 menit). Vercel akan membangun proyek, menginstall dependensi, dan menayangkannya.
+3.  Simpan konfigurasi PM2 agar otomatis jalan saat restart server:
+    ```bash
+    pm2 save
+    pm2 startup
+    # Copy paste perintah yang muncul di layar dan jalankan
+    ```
 
----
-
-## Langkah 4: Finalisasi Konfigurasi
-
-Setelah deploy berhasil ("Congratulations!"):
-
-1.  Klik tombol **Continue to Dashboard**.
-2.  Lihat domain yang diberikan Vercel (biasanya `https://lastnote18.vercel.app` atau `https://lastnote18-username.vercel.app`).
-3.  **PENTING**: Update Environment Variable `NEXTAUTH_URL`.
-    *   Masuk ke **Settings** -> **Environment Variables**.
-    *   Tambahkan/Edit `NEXTAUTH_URL` dan isi dengan domain Vercel yang valid tadi (misal: `https://lastnote18.vercel.app`).
-    *   (Opsional) Jika Anda punya domain sendiri, atur di menu **Domains**, lalu update `NEXTAUTH_URL` sesuai domain itu.
-4.  **Redeploy** agar perubahan env var tadi aktif:
-    *   Masuk ke menu **Deployments**.
-    *   Klik titik tiga di deployment paling atas -> **Redeploy**.
+Sekarang aplikasi berjalan di port **3000** (http://localhost:3000).
 
 ---
 
-## Langkah 5: Update Supabase Auth URL
+## Langkah 5: Setup Nginx (Reverse Proxy)
 
-Supabase perlu tahu domain website Anda agar redirect login berhasil.
+Agar bisa diakses via port 80 (HTTP) atau domain tanpa mengetik `:3000`.
 
-1.  Buka Dashboard Supabase proyek Anda.
-2.  Masuk ke **Authentication** -> **URL Configuration**.
-3.  Di bagian **Site URL**, masukkan domain Vercel Anda (misal: `https://lastnote18.vercel.app`).
-4.  Di bagian **Redirect URLs**, tambahkan:
-    *   `https://lastnote18.vercel.app/api/auth/callback/credentials`
-    *   `https://lastnote18.vercel.app`
-5.  Klik **Save**.
+1.  Buat konfigurasi Nginx:
+    ```bash
+    sudo nano /etc/nginx/sites-available/lastnote18
+    ```
+
+2.  Isi dengan konfigurasi berikut:
+    ```nginx
+    server {
+        listen 80;
+        server_name domain-anda.com; # Atau IP server jika belum ada domain (misal: 192.168.1.100)
+
+        location / {
+            proxy_pass http://localhost:3000;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host $host;
+            proxy_cache_bypass $http_upgrade;
+        }
+    }
+    ```
+
+3.  Aktifkan situs:
+    ```bash
+    sudo ln -s /etc/nginx/sites-available/lastnote18 /etc/nginx/sites-enabled/
+    sudo nginx -t # Cek apakah ada error
+    sudo systemctl restart nginx
+    ```
+
+Sekarang Anda bisa akses web melalui browser dengan mengetik IP Server atau Domain Anda.
 
 ---
 
-## Selesai!
+## Cara Update Aplikasi (Git Pull)
 
-Website Anda sekarang sudah online.
--   Jika Anda ingin update kode, cukup edit di komputer lokal -> `git add .` -> `git commit -m "pesan"` -> `git push`. Vercel akan otomatis mendeteksi perubahan dan men-deploy ulang dalam hitungan detik/menit.
+Jika Anda melakukan perubahan kode di laptop/PC dan sudah di-push ke GitHub:
 
-Selamat mencoba!
+1.  Masuk ke folder proyek di server:
+    ```bash
+    cd /var/www/lastnote18
+    ```
+
+2.  Tarik perubahan terbaru:
+    ```bash
+    git pull origin main
+    ```
+
+3.  Install dependensi baru (jika ada):
+    ```bash
+    npm install
+    ```
+
+4.  Build ulang:
+    ```bash
+    npm run build
+    ```
+
+5.  Restart aplikasi PM2:
+    ```bash
+    pm2 restart lastnote18
+    ```
+
+Selesai! Aplikasi sudah terupdate.

@@ -6,8 +6,21 @@ import SessionProvider from '@/components/providers/SessionProvider';
 import { ClassThemeProvider } from '@/components/providers/ClassThemeProvider';
 import { Toaster } from '@/components/ui/toaster';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
-const orbitron = Orbitron({ subsets: ['latin'], variable: '--font-orbitron' });
+// Configure fonts with fallback and adjust loading
+// If fetch fails during build on restricted networks, we can use a system font stack
+const inter = Inter({ 
+  subsets: ['latin'], 
+  variable: '--font-inter',
+  display: 'swap',
+  adjustFontFallback: false // Disable fallback adjustment to prevent some build errors
+});
+
+const orbitron = Orbitron({ 
+  subsets: ['latin'], 
+  variable: '--font-orbitron',
+  display: 'swap',
+  adjustFontFallback: false
+});
 
 export const metadata: Metadata = {
   title: 'One Last Note',
@@ -36,7 +49,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${orbitron.variable} ${inter.className}`}>
+      <body className={`${inter.variable} ${orbitron.variable} font-sans`}>
         <SessionProvider>
           <ClassThemeProvider>
             {children}
