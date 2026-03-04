@@ -73,7 +73,7 @@ export default async function AdminPage() {
   }
 
   // 4. Fetch All Classes (Only for ADMINISTRATOR to switch)
-  let allClasses = [];
+  let allClasses: { id: string; name: string }[] = [];
   if (role === 'ADMINISTRATOR') {
     const { data: classes } = await supabase
       .from('classes')
