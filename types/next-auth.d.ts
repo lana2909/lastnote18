@@ -12,7 +12,6 @@ declare module 'next-auth' {
     isSuperAdmin: boolean;
     classId?: string;
     themeId?: string;
-    originalClassId?: string;
   }
 
   interface Session {
@@ -25,7 +24,6 @@ declare module 'next-auth' {
       isSuperAdmin: boolean;
       classId?: string;
       themeId?: string;
-      originalClassId?: string;
     };
   }
 }
@@ -39,6 +37,5 @@ declare module 'next-auth/jwt' {
     username: string;
     classId?: string;
     themeId?: string;
-    originalClassId?: string;
   }
 }

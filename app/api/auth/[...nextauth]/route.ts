@@ -20,9 +20,6 @@ export const authOptions: NextAuthOptions = {
 
         const supabase = supabaseServer();
 
-        // Debug Log
-        console.log('Login Attempt:', { username: credentials.username, classId: credentials.classId });
-
         const { data: user, error } = await supabase
           .from('users')
           .select('*, class:classes!users_class_id_fkey(id, theme_id)')
@@ -30,7 +27,6 @@ export const authOptions: NextAuthOptions = {
           .maybeSingle();
 
         if (error || !user) {
-          console.log('User not found or DB error:', error);
           return null;
         }
 
@@ -38,18 +34,10 @@ export const authOptions: NextAuthOptions = {
         let effectiveClassId = userWithClass.class?.id;
         let effectiveThemeId = userWithClass.class?.theme_id;
         
-        console.log('Found User:', { 
-          id: user.id, 
-          role: user.role, 
-          dbClassId: effectiveClassId,
-          providedClassId: credentials.classId 
-        });
-
         // 1. Validate Class Selection
         // If user has a class assigned (not a super admin without class), enforce class match
         if (effectiveClassId && credentials.classId) {
            if (effectiveClassId !== credentials.classId) {
-             console.log('Class mismatch. User belongs to', effectiveClassId, 'but selected', credentials.classId);
              return null;
            }
         }
@@ -67,15 +55,8 @@ export const authOptions: NextAuthOptions = {
               effectiveThemeId = selectedClass.theme_id;
               // Set the class object so originalClassId is populated correctly below
               userWithClass.class = { id: selectedClass.id }; 
-           } else {
-             console.log('Selected class not found:', credentials.classId);
-             return null;
            }
         }
-        
-        // IMPORTANT: If user is ADMINISTRATOR or EDITOR without class, they MUST select a class to login?
-        // Or can they login without class? The UI forces class selection.
-        // If credentials.classId is missing and user has no class, maybe fail?
         
         const isPasswordValid = await bcrypt.compare(
           credentials.password,
@@ -83,7 +64,6 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (!isPasswordValid) {
-          console.log('Invalid password for user:', user.username);
           return null;
         }
 
@@ -101,8 +81,6 @@ export const authOptions: NextAuthOptions = {
              effectiveThemeId = viewedClass.theme_id;
            }
         }
-
-        console.log('Login Successful. Returning user session data.');
 
         return {
           id: user.id,
@@ -189,13 +167,11 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   pages: {
     signIn: '/login',
   },
   secret: process.env.NEXTAUTH_SECRET,
-  debug: true, // Enable NextAuth debugging
 };
 
 const handler = NextAuth(authOptions);
