@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Send, Loader2, Sparkles, ChevronLeft, ChevronRight, Menu, X } from 'lucide-react';
 
-interface Question {
+export interface Question {
   id: string;
   label: string;
   placeholder: string;
