@@ -10,8 +10,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-inter)'],
-        orbitron: ['var(--font-orbitron)'],
+        sans: ['Inter', 'sans-serif'],
+        orbitron: ['Orbitron', 'sans-serif'],
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
