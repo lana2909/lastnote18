@@ -1,0 +1,227 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+    --radius: 0.5rem;
+  }
+
+  /* GTA Theme */
+  [data-theme='gta'] {
+    --background: 142 70% 5%; /* Very dark green/black */
+    --foreground: 142 70% 90%;
+    --primary: 142 76% 36%; /* GTA Green */
+    --primary-foreground: 0 0% 100%;
+    --accent: 24 95% 53%; /* GTA Orange */
+    --accent-foreground: 0 0% 10%;
+    --card: 142 70% 8%;
+    --border: 142 76% 36%;
+  }
+
+  /* Ocean Theme (Minimalist) */
+  [data-theme='ocean'] {
+    --background: 200 50% 95%; /* Light Blue */
+    --foreground: 200 50% 10%;
+    --primary: 190 80% 40%; /* Teal/Ocean */
+    --primary-foreground: 0 0% 100%;
+    --card: 0 0% 100%;
+    --border: 190 30% 80%;
+    --secondary: 200 30% 90%;
+  }
+
+  /* Galaxy Theme */
+  [data-theme='galaxy'] {
+    --background: 260 50% 5%; /* Deep Space */
+    --foreground: 260 20% 90%;
+    --primary: 280 80% 60%; /* Nebula Purple */
+    --primary-foreground: 0 0% 100%;
+    --accent: 320 80% 60%; /* Pink Star */
+    --card: 260 50% 8%;
+    --border: 280 50% 30%;
+  }
+
+  /* Polaroid / Vintage */
+  [data-theme='polaroid'] {
+    --background: 40 30% 90%; /* Paper/Beige */
+    --foreground: 30 20% 20%; /* Brown/Sepia text */
+    --primary: 20 60% 40%; /* Rust */
+    --primary-foreground: 40 30% 95%;
+    --card: 40 20% 95%;
+    --border: 30 20% 80%;
+    --radius: 0rem; /* Sharp edges for polaroid feel */
+  }
+
+  /* Mars */
+  [data-theme='mars'] {
+    --background: 10 30% 10%; /* Dark Red/Brown */
+    --foreground: 10 30% 90%;
+    --primary: 10 80% 50%; /* Mars Red */
+    --primary-foreground: 0 0% 100%;
+    --card: 10 30% 15%;
+    --border: 10 50% 30%;
+  }
+
+  /* Inside Out */
+  [data-theme='inside_out'] {
+    --background: 50 100% 95%; /* Joy Yellow-ish */
+    --foreground: 240 50% 20%;
+    --primary: 210 90% 60%; /* Sadness Blue */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 120 60% 60%; /* Disgust Green */
+    --accent: 0 80% 60%; /* Anger Red */
+    --card: 0 0% 100%;
+  }
+
+  /* Monochrome */
+  [data-theme='monochrome'] {
+    --background: 0 0% 5%;
+    --foreground: 0 0% 95%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 20%;
+    --secondary-foreground: 0 0% 100%;
+    --card: 0 0% 10%;
+    --border: 0 0% 30%;
+  }
+
+  /* Nuanu */
+  [data-theme='nuanu'] {
+    --background: 220 20% 10%;
+    --foreground: 220 20% 90%;
+    --primary: 45 90% 60%; /* Gold */
+    --primary-foreground: 220 20% 10%;
+    --card: 220 20% 15%;
+    --border: 45 50% 30%;
+  }
+
+  /* Vintage Simple */
+  [data-theme='vintage_simple'] {
+    --background: 35 20% 94%;
+    --foreground: 200 10% 20%;
+    --primary: 180 30% 40%; /* Muted Teal */
+    --primary-foreground: 35 20% 94%;
+    --card: 35 10% 98%;
+    --border: 180 20% 80%;
+  }
+
+  /* Hooligans */
+  [data-theme='hooligans'] {
+    --background: 0 0% 5%;
+    --foreground: 0 100% 50%; /* Red Text? Maybe too much. Let's do White text with Red accents */
+    --foreground: 0 0% 95%;
+    --primary: 0 100% 40%; /* Deep Red */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 20%; /* Dark Gray */
+    --card: 0 0% 8%;
+    --border: 0 100% 30%;
+  }
+
+  /* Hardcore Hooligans */
+  [data-theme='hardcore_hooligans'] {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --primary: 0 100% 50%; /* Bright Red */
+    --primary-foreground: 0 0% 0%;
+    --destructive: 0 100% 50%;
+    --card: 0 0% 5%;
+    --border: 0 100% 50%;
+  }
+
+  /* Computer */
+  [data-theme='computer'] {
+    --background: 120 10% 5%;
+    --foreground: 120 100% 50%; /* Matrix Green */
+    --primary: 120 100% 50%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 120 30% 10%;
+    --card: 120 20% 5%;
+    --border: 120 100% 20%;
+    --font-mono: 'Courier New', monospace; /* Hypothetical var */
+  }
+
+  /* Machine Engineering */
+  [data-theme='machine_engineering'] {
+    --background: 210 10% 20%; /* Gunmetal */
+    --foreground: 210 10% 90%;
+    --primary: 210 50% 60%; /* Steel Blue */
+    --primary-foreground: 0 0% 100%;
+    --card: 210 10% 25%;
+    --border: 210 20% 40%;
+  }
+
+  /* Machine Banget */
+  [data-theme='machine_banget'] {
+    --background: 0 0% 15%; /* Industrial Gray */
+    --foreground: 45 20% 90%; /* Slight metallic tint */
+    --primary: 45 80% 50%; /* Orange/Safety */
+    --primary-foreground: 0 0% 0%;
+    --card: 0 0% 20%;
+    --border: 0 0% 40%;
+  }
+
+  /* Graffiti */
+  [data-theme='graffiti'] {
+    --background: 280 20% 10%;
+    --foreground: 0 0% 95%;
+    --primary: 320 100% 50%; /* Hot Pink */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 190 100% 50%; /* Cyan */
+    --accent: 60 100% 50%; /* Yellow */
+    --card: 280 20% 15%;
+    --border: 320 50% 50%;
+  }
+
+  /* Film */
+  [data-theme='film'] {
+    --background: 0 0% 5%;
+    --foreground: 0 0% 90%;
+    --primary: 0 0% 100%; /* White */
+    --primary-foreground: 0 0% 0%; /* Black */
+    --secondary: 0 0% 20%;
+    --card: 0 0% 10%;
+    --border: 0 0% 40%;
+  }
+
+  /* Magical Galaxy (TJKT 2 Special Theme) */
+  [data-theme='magical_galaxy'] {
+    --background: 260 40% 10%; /* Deep Purple Space */
+    --foreground: 260 10% 95%; /* Starlight White */
+    --primary: 280 100% 70%; /* Magic Purple */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 200 100% 70%; /* Sky Blue */
+    --accent: 50 100% 70%; /* Moon Gold */
+    --card: 260 40% 15%; /* Darker Space Card */
+    --border: 280 60% 40%;
+    --ring: 280 100% 70%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

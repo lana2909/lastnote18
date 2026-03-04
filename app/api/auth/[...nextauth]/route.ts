@@ -1,0 +1,202 @@
+
+import NextAuth, { NextAuthOptions } from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import * as bcrypt from 'bcryptjs';
+import { supabaseServer } from '@/lib/supabase';
+
+export const authOptions: NextAuthOptions = {
+  providers: [
+    CredentialsProvider({
+      name: 'Credentials',
+      credentials: {
+        username: { label: 'Username', type: 'text' },
+        password: { label: 'Password', type: 'password' },
+        classId: { label: 'Class ID', type: 'text' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.username || !credentials?.password) {
+          return null;
+        }
+
+        const supabase = supabaseServer();
+
+        const { data: user, error } = await supabase
+          .from('users')
+          .select('*, class:classes(id, theme_id)')
+          .eq('username', credentials.username)
+          .maybeSingle();
+
+        if (error || !user) {
+          return null;
+        }
+
+        const userWithClass = user as any;
+        let effectiveClassId = userWithClass.class?.id;
+        let effectiveThemeId = userWithClass.class?.theme_id;
+
+        console.log('[Auth] Login Attempt:', { 
+            username: credentials.username, 
+            providedClassId: credentials.classId, 
+            userRole: user.role, 
+            userClassId: effectiveClassId,
+            envUrl: process.env.NEXTAUTH_URL
+        });
+        
+        // 1. Validate Class Selection
+        // Relax check for ADMINISTRATOR
+        if (user.role !== 'ADMINISTRATOR' && effectiveClassId && credentials.classId) {
+           if (effectiveClassId !== credentials.classId) {
+             console.log('[Auth] Class mismatch for non-admin');
+             return null;
+           }
+        }
+
+        // If user has NO fixed class (e.g. Global Editor), use the selected class from login
+        if (!effectiveClassId && credentials.classId) {
+           const { data: selectedClass } = await supabase
+             .from('classes')
+             .select('id, theme_id')
+             .eq('id', credentials.classId)
+             .single();
+             
+           if (selectedClass) {
+              effectiveClassId = selectedClass.id;
+              effectiveThemeId = selectedClass.theme_id;
+              // Set the class object so originalClassId is populated correctly below
+              userWithClass.class = { id: selectedClass.id }; 
+           }
+        }
+        
+        const isPasswordValid = await bcrypt.compare(
+          credentials.password,
+          user.password
+        );
+
+        if (!isPasswordValid) {
+          console.log('[Auth] Invalid password for user:', user.username);
+          return null;
+        }
+
+        // Check if ADMINISTRATOR has a view_as_class_id set
+        if (user.role === 'ADMINISTRATOR' && user.view_as_class_id) {
+           // Fetch the theme for the viewed class
+           const { data: viewedClass } = await supabase
+             .from('classes')
+             .select('id, theme_id')
+             .eq('id', user.view_as_class_id)
+             .single();
+           
+           if (viewedClass) {
+             effectiveClassId = viewedClass.id;
+             effectiveThemeId = viewedClass.theme_id;
+           }
+        }
+
+        return {
+          id: user.id,
+          name: user.name,
+          username: user.username,
+          role: user.role, // ADMINISTRATOR, EDITOR, AUTHOR, SUBSCRIBER
+          isUnlocked: user.is_unlocked,
+          isSuperAdmin: user.is_super_admin,
+          classId: effectiveClassId,
+          themeId: effectiveThemeId,
+          originalClassId: userWithClass.class?.id || effectiveClassId, // Use effective if no original
+        };
+      },
+    }),
+  ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+        token.isUnlocked = user.isUnlocked;
+        token.username = user.username;
+        token.isSuperAdmin = user.isSuperAdmin;
+        token.classId = user.classId;
+        token.themeId = user.themeId;
+        token.originalClassId = user.originalClassId;
+      }
+
+      // Refresh data from DB on every session check to handle role changes or class switching
+      if (token.id) {
+        const supabase = supabaseServer();
+        const { data: userData } = await supabase
+          .from('users')
+          .select('role, is_unlocked, is_super_admin, view_as_class_id, class:classes(id, theme_id)')
+          .eq('id', token.id)
+          .maybeSingle();
+
+        if (userData) {
+          const userWithClass = userData as any;
+          token.role = userData.role;
+          token.isUnlocked = userData.is_unlocked;
+          token.isSuperAdmin = userData.is_super_admin;
+          token.originalClassId = userWithClass.class?.id;
+          
+          // Handle Class Switching for ADMINISTRATOR
+          if (userData.role === 'ADMINISTRATOR' && userData.view_as_class_id) {
+             const { data: viewedClass } = await supabase
+               .from('classes')
+               .select('id, theme_id')
+               .eq('id', userData.view_as_class_id)
+               .single();
+             
+             if (viewedClass) {
+               token.classId = viewedClass.id;
+               token.themeId = viewedClass.theme_id;
+             } else {
+               // Fallback if viewed class not found
+               token.classId = userWithClass.class?.id;
+               token.themeId = userWithClass.class?.theme_id;
+             }
+          } else {
+            // Normal behavior
+            token.classId = userWithClass.class?.id;
+            token.themeId = userWithClass.class?.theme_id;
+          }
+        }
+      }
+
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as string;
+        session.user.isUnlocked = token.isUnlocked as boolean;
+        session.user.username = token.username as string;
+        session.user.isSuperAdmin = token.isSuperAdmin as boolean;
+        session.user.classId = token.classId as string;
+        session.user.themeId = token.themeId as string;
+        session.user.originalClassId = token.originalClassId as string;
+      }
+      return session;
+    },
+  },
+  session: {
+    strategy: 'jwt',
+  },
+  pages: {
+    signIn: '/login',
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+  // Trust the proxy (Cloudflare Tunnel) to handle HTTPS
+  // trustHost: true, // Not supported in NextAuthOptions type directly, but NextAuth reads TRUST_HOST env var
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+  },
+} as NextAuthOptions;
+
+const handler = NextAuth(authOptions);
+
+export { handler as GET, handler as POST };
