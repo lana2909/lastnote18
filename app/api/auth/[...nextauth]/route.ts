@@ -33,20 +33,11 @@ export const authOptions: NextAuthOptions = {
         const userWithClass = user as any;
         let effectiveClassId = userWithClass.class?.id;
         let effectiveThemeId = userWithClass.class?.theme_id;
-
-        console.log('[Auth] Login Attempt:', { 
-            username: credentials.username, 
-            providedClassId: credentials.classId, 
-            userRole: user.role, 
-            userClassId: effectiveClassId,
-            envUrl: process.env.NEXTAUTH_URL
-        });
         
         // 1. Validate Class Selection
-        // Relax check for ADMINISTRATOR
-        if (user.role !== 'ADMINISTRATOR' && effectiveClassId && credentials.classId) {
+        // If user has a class assigned (not a super admin without class), enforce class match
+        if (effectiveClassId && credentials.classId) {
            if (effectiveClassId !== credentials.classId) {
-             console.log('[Auth] Class mismatch for non-admin');
              return null;
            }
         }
@@ -73,7 +64,6 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (!isPasswordValid) {
-          console.log('[Auth] Invalid password for user:', user.username);
           return null;
         }
 
@@ -182,20 +172,7 @@ export const authOptions: NextAuthOptions = {
     signIn: '/login',
   },
   secret: process.env.NEXTAUTH_SECRET,
-  // Trust the proxy (Cloudflare Tunnel) to handle HTTPS
-  // trustHost: true, // Not supported in NextAuthOptions type directly, but NextAuth reads TRUST_HOST env var
-  cookies: {
-    sessionToken: {
-      name: `next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-      },
-    },
-  },
-} as NextAuthOptions;
+};
 
 const handler = NextAuth(authOptions);
 

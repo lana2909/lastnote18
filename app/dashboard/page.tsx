@@ -9,7 +9,6 @@ export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
 
   if (!session) {
-    console.log('[Dashboard] No session found, redirecting to login');
     redirect('/login');
   }
 

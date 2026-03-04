@@ -77,7 +77,7 @@ export function ChangePasswordDialog() {
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          className="border-input text-foreground hover:bg-accent hover:text-accent-foreground rounded-xl"
+          className="border-white/20 text-white hover:bg-white/10 rounded-xl"
         >
           <KeyRound className="w-4 h-4 mr-2" />
           Change Password

@@ -1,253 +1,192 @@
-# Deployment Guide - One Last Note
 
-## Prerequisites
+# Panduan Deployment Menggunakan GitHub (Cara Mudah & Modern)
 
-- Debian server with 2GB RAM
-- Node.js 18+ installed
-- Supabase project set up
-- Domain name (optional)
+Panduan ini akan membantu Anda men-deploy aplikasi "One Last Note" menggunakan GitHub. Cara ini jauh lebih mudah daripada upload manual (ZIP) karena untuk update selanjutnya Anda cukup melakukan `git push` dan `git pull`.
 
-## Step 1: Set Up Supabase
+## Persiapan Awal
 
-1. Create a Supabase project at https://supabase.com
-2. Note down your:
-   - Project URL
-   - Anon/Public key
-   - Service Role key (keep secret!)
+Pastikan Anda memiliki:
+1.  Akun **GitHub** (https://github.com).
+2.  Server VPS (Ubuntu/Debian) yang sudah bisa diakses via SSH.
+3.  Project "One Last Note" di komputer lokal Anda.
 
-3. The database schema has been created via migrations. If starting fresh, ensure all migrations are applied in your Supabase project.
+---
 
-## Step 2: Configure Environment Variables
+## Langkah 1: Upload Project ke GitHub
 
-On your server, create a `.env.local` file:
+Lakukan ini di komputer/laptop Anda (Local).
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+1.  **Buat Repository Baru di GitHub**:
+    *   Buka GitHub dan buat repository baru (klik tombol `+` di pojok kanan atas -> **New repository**).
+    *   Beri nama, misalnya `one-last-note`.
+    *   Pilih **Private** (agar kode dan data rahasia aman).
+    *   Jangan centang "Add a README file" (karena kita sudah punya).
+    *   Klik **Create repository**.
 
-NEXTAUTH_URL=https://yourdomain.com
-NEXTAUTH_SECRET=generate_with_openssl_rand_base64_32
-```
+2.  **Hubungkan Project Lokal ke GitHub**:
+    Buka terminal di folder project Anda (di VS Code atau CMD), lalu jalankan perintah berikut satu per satu:
 
-Generate NEXTAUTH_SECRET:
-```bash
-openssl rand -base64 32
-```
+    ```bash
+    # Inisialisasi git (jika belum pernah)
+    git init
 
-## Step 3: Seed the Database
+    # Tambahkan semua file ke staging area
+    git add .
 
-Run the seed script to create 36 users:
+    # Commit perubahan pertama
+    git commit -m "First commit: Initial project upload"
 
-```bash
-npm run seed
-```
+    # Hubungkan ke repository GitHub yang baru dibuat
+    # Ganti URL_REPO_ANDA dengan link repository GitHub Anda (contoh: https://github.com/username/one-last-note.git)
+    git remote add origin https://github.com/USERNAME_GITHUB_ANDA/NAMA_REPO_ANDA.git
 
-**IMPORTANT**: Save the generated credentials! They will be printed to the console.
+    # Rename branch utama ke 'main'
+    git branch -M main
 
-## Step 4: Build the Application
+    # Upload (Push) ke GitHub
+    git push -u origin main
+    ```
 
-```bash
-npm install
-npm run build
-```
+    *Catatan: Jika diminta login, masukkan username & password/token GitHub Anda.*
 
-The standalone build will be created in `.next/standalone/`
+---
 
-## Step 5: Prepare Deployment Files
+## Langkah 2: Setup di Server (VPS)
 
-```bash
-mkdir -p deploy
-cp -r .next/standalone/* deploy/
-cp -r .next/static deploy/.next/static
-cp -r public deploy/public
-cp .env.local deploy/
-```
+Sekarang masuk ke server VPS Anda menggunakan SSH (misal via PuTTY atau Terminal).
 
-## Step 6: Upload to Server
+1.  **Install Node.js & Git (Jika belum ada)**:
+    ```bash
+    # Update server
+    sudo apt update && sudo apt upgrade -y
 
-```bash
-scp -r deploy/* user@your-server:/var/www/one-last-note/
-```
+    # Install Git
+    sudo apt install git -y
 
-## Step 7: Set Up Systemd Service
+    # Install Node.js (Versi 18 LTS atau 20 LTS disarankan)
+    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+    sudo apt install -y nodejs
 
-Create `/etc/systemd/system/one-last-note.service`:
+    # Cek versi (pastikan muncul)
+    node -v
+    npm -v
+    git --version
+    ```
 
-```ini
-[Unit]
-Description=One Last Note
-After=network.target
+2.  **Install PM2 (Process Manager)**:
+    PM2 berguna agar aplikasi tetap jalan walaupun server restart atau terminal ditutup.
+    ```bash
+    sudo npm install -g pm2
+    ```
 
-[Service]
-Type=simple
-User=www-data
-WorkingDirectory=/var/www/one-last-note
-ExecStart=/usr/bin/node server.js
-Restart=always
-RestartSec=10
-StandardOutput=syslog
-StandardError=syslog
-SyslogIdentifier=one-last-note
-Environment=NODE_ENV=production
-Environment=PORT=3000
+3.  **Clone Repository dari GitHub**:
+    Masuk ke folder `/var/www` (atau folder home Anda) dan download projectnya.
 
-[Install]
-WantedBy=multi-user.target
-```
+    ```bash
+    cd /var/www
+    # Clone project (akan diminta username/password GitHub karena repo Private)
+    sudo git clone https://github.com/USERNAME_GITHUB_ANDA/NAMA_REPO_ANDA.git one-last-note
 
-Enable and start the service:
+    # Masuk ke folder project
+    cd one-last-note
+    ```
 
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable one-last-note
-sudo systemctl start one-last-note
-sudo systemctl status one-last-note
-```
+    *Tips: Agar tidak perlu masukkan password terus, Anda bisa setting SSH Key di GitHub, tapi HTTPS biasa juga tidak masalah.*
 
-## Step 8: Configure Nginx (Reverse Proxy)
+4.  **Setup Environment Variables (.env)**:
+    File `.env` tidak ikut di-upload ke GitHub demi keamanan. Anda harus membuatnya manual di server.
 
-Create `/etc/nginx/sites-available/one-last-note`:
+    ```bash
+    # Buat file .env.local
+    sudo nano .env.local
+    ```
 
-```nginx
-server {
-    listen 80;
-    server_name yourdomain.com;
+    Paste isi konfigurasi berikut (sesuaikan dengan data Supabase Anda yang sudah jalan di TJKT 2):
 
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
+    ```env
+    NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
+    SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+    NEXTAUTH_URL=http://IP_SERVER_ANDA_ATAU_DOMAIN
+    NEXTAUTH_SECRET=rahasia_banget_12345
+    ```
 
-Enable the site:
+    Simpan dengan `Ctrl+O`, `Enter`, lalu `Ctrl+X`.
 
-```bash
-sudo ln -s /etc/nginx/sites-available/one-last-note /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
-```
+5.  **Install & Build Aplikasi**:
+    ```bash
+    # Install dependencies
+    sudo npm install
 
-## Step 9: Set Up SSL with Certbot (Optional but Recommended)
+    # Build aplikasi Next.js
+    sudo npm run build
+    ```
 
-```bash
-sudo apt install certbot python3-certbot-nginx
-sudo certbot --nginx -d yourdomain.com
-```
+6.  **Jalankan Aplikasi dengan PM2**:
+    ```bash
+    # Start aplikasi di port 3000
+    sudo pm2 start npm --name "one-last-note" -- start
 
-## Step 10: Monitor the Application
+    # Simpan list proses agar auto-start saat boot
+    sudo pm2 save
+    sudo pm2 startup
+    ```
 
-View logs:
-```bash
-sudo journalctl -u one-last-note -f
-```
+    Aplikasi sekarang sudah berjalan di `http://IP_SERVER_ANDA:3000`.
 
-Check status:
-```bash
-sudo systemctl status one-last-note
-```
+---
 
-Restart if needed:
-```bash
-sudo systemctl restart one-last-note
-```
+## Langkah 3: Cara Update (Deploy Ulang)
 
-## Performance Optimization
+Ini adalah bagian yang Anda cari. Setiap kali Anda ada perubahan kode (misal fix bug login tadi), lakukan langkah ini:
 
-### Memory Settings
-
-If you encounter memory issues on a 2GB RAM server:
+### 1. Di Komputer Lokal (Laptop Anda)
+Setelah selesai edit kodingan:
 
 ```bash
-# Add to /etc/systemd/system/one-last-note.service
-Environment=NODE_OPTIONS="--max-old-space-size=1536"
+# Tambahkan file yang berubah
+git add .
+
+# Simpan perubahan (Commit)
+git commit -m "Fix login bug and update roles"
+
+# Kirim ke GitHub (Push)
+git push
 ```
 
-Then reload:
+### 2. Di Server (VPS)
+Masuk ke server via SSH, lalu jalankan:
+
 ```bash
-sudo systemctl daemon-reload
-sudo systemctl restart one-last-note
+# Masuk ke folder project
+cd /var/www/one-last-note
+
+# Ambil kode terbaru dari GitHub
+sudo git pull
+
+# Install ulang dependencies (jika ada library baru, kalau tidak ada skip aja)
+sudo npm install
+
+# Build ulang aplikasi (Wajib jika ada perubahan codingan Next.js)
+sudo npm run build
+
+# Restart aplikasi agar perubahan diterapkan
+sudo pm2 restart one-last-note
 ```
 
-### Database Connection Pooling
+**Selesai!** Web sudah terupdate dengan versi terbaru tanpa perlu upload-upload file manual lagi.
 
-The connection string is already optimized with `?connection_limit=5` in the Supabase URL.
+---
 
-## Updating the Application
+## Masalah Umum (Troubleshooting)
 
-1. On your development machine, make changes and build:
-```bash
-npm run build
-```
+1.  **Lupa Password GitHub saat `git push`**:
+    GitHub sekarang menggunakan "Personal Access Token" (PAT) sebagai password. Anda harus generate token di Settings > Developer Settings > Personal Access Tokens.
 
-2. Deploy the new build:
-```bash
-scp -r .next/standalone/* user@server:/var/www/one-last-note/
-```
+2.  **Permission Denied saat `git pull` di server**:
+    Gunakan `sudo` di depan perintah git jika folder project dibuat menggunakan sudo. Atau ubah kepemilikan folder ke user Anda:
+    `sudo chown -R $USER:$USER /var/www/one-last-note`
 
-3. Restart the service:
-```bash
-sudo systemctl restart one-last-note
-```
-
-## Troubleshooting
-
-### Application won't start
-- Check logs: `sudo journalctl -u one-last-note -f`
-- Verify environment variables in `.env.local`
-- Ensure Node.js version is 18+
-
-### Database connection errors
-- Verify Supabase credentials
-- Check network connectivity to Supabase
-- Ensure RLS policies are correctly configured
-
-### Memory issues
-- Monitor with: `free -h`
-- Reduce Node.js memory limit if needed
-- Consider upgrading server RAM
-
-### Build fails
-- Ensure all dependencies are installed
-- Check Node.js version compatibility
-- Review build output for specific errors
-
-## Security Checklist
-
-- [ ] NEXTAUTH_SECRET is unique and secure
-- [ ] Service role key is not exposed to client
-- [ ] SSL certificate is installed
-- [ ] Firewall is configured (allow 80, 443, 22 only)
-- [ ] Server is updated: `sudo apt update && sudo apt upgrade`
-- [ ] Non-root user is used for running the app
-- [ ] Backups are configured for Supabase database
-
-## Backup Strategy
-
-### Database Backups (Supabase)
-Supabase automatically backs up your database daily. For manual backups:
-
-1. Go to your Supabase project dashboard
-2. Navigate to Database > Backups
-3. Create manual backup before major changes
-
-### Application Files
-```bash
-tar -czf one-last-note-backup-$(date +%Y%m%d).tar.gz /var/www/one-last-note
-```
-
-## Support
-
-For issues:
-1. Check application logs
-2. Verify Supabase dashboard for database issues
-3. Review Nginx logs: `/var/log/nginx/error.log`
-4. Check system resources: `htop` or `free -h`
+3.  **Aplikasi Error setelah Update**:
+    Cek log errornya dengan:
+    `sudo pm2 logs one-last-note`

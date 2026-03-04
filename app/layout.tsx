@@ -36,21 +36,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link 
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Orbitron:wght@400..900&display=swap" 
-          rel="stylesheet" 
-        />
-        <style dangerouslySetInnerHTML={{ __html: `
-          :root {
-            --font-inter: 'Inter', sans-serif;
-            --font-orbitron: 'Orbitron', sans-serif;
-          }
-        `}} />
-      </head>
-      <body className={`font-sans antialiased`}>
+      <body className={`${inter.variable} ${orbitron.variable} ${inter.className}`}>
         <SessionProvider>
           <ClassThemeProvider>
             {children}
