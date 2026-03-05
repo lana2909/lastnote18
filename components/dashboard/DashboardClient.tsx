@@ -131,10 +131,10 @@ export default function DashboardClient({
                   </h1>
                 </div>
                 <p className="text-muted-foreground">Welcome back, {user.name}</p>
-                {user.role === 'ADMIN' && (
+                {user.role !== 'SUBSCRIBER' && (
                   <Badge className="mt-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0">
                     <Shield className="w-3 h-3 mr-1" />
-                    Admin
+                    {user.role === 'ADMINISTRATOR' ? 'Super Admin' : user.role}
                   </Badge>
                 )}
               </div>
@@ -149,7 +149,7 @@ export default function DashboardClient({
                     My Messages
                   </Button>
                 )}
-                {user.role === 'ADMIN' && (
+                {user.role !== 'SUBSCRIBER' && (
                   <Button
                     onClick={() => router.push('/admin')}
                     className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-xl transition-all hover:scale-105 shadow-md"
