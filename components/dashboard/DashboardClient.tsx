@@ -284,59 +284,61 @@ export default function DashboardClient({
           </div>
 
           {/* Public Class Memories Section */}
-          {publicMemories.length > 0 && (
-            <div className="bg-card/80 backdrop-blur-xl border border-border shadow-lg rounded-2xl p-6 md:p-8 mt-6 transition-all duration-300">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="bg-accent p-3 rounded-full">
-                  <Quote className="w-6 h-6 text-accent-foreground" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-foreground font-orbitron">
-                    Class Memories
-                  </h2>
-                  <p className="text-muted-foreground">
-                    A collection of our best moments together
-                  </p>
-                </div>
+          <div className="bg-card/80 backdrop-blur-xl border border-border shadow-lg rounded-2xl p-6 md:p-8 mt-6 transition-all duration-300">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-accent p-3 rounded-full">
+                <Quote className="w-6 h-6 text-accent-foreground" />
               </div>
-
-              {isLocked ? (
-                <div 
-                  onClick={handleLockClick}
-                  className={`
-                    bg-background/50 border border-border rounded-xl p-8 
-                    flex flex-col items-center justify-center text-center 
-                    cursor-pointer hover:bg-background/80 transition-all
-                    ${isShake ? 'animate-shake' : ''}
-                  `}
-                >
-                  <div className="bg-muted p-4 rounded-full mb-4">
-                    <Lock className="w-8 h-8 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-xl font-bold text-foreground mb-2">Locked for Surprise! 🔒</h3>
-                  <p className="text-muted-foreground max-w-md mx-auto">
-                    This wall contains everyone's best memories. It will be revealed on <span className="text-primary font-semibold">{unlockDate ? format(unlockDate, 'MMMM do, yyyy') : 'the special day'}</span>.
-                  </p>
-                  <p className="text-xs text-muted-foreground/60 mt-4">(Click the lock to check status)</p>
-                </div>
-              ) : (
-                <ScrollArea className="h-[300px] pr-4">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {publicMemories.map((memory) => (
-                      <Card key={memory.id} className="bg-background/50 border-border hover:bg-background/80 transition-colors">
-                        <CardContent className="p-4">
-                          <Quote className="w-4 h-4 text-primary mb-2 opacity-50" />
-                          <p className="text-foreground italic text-sm leading-relaxed">
-                            "{memory.momen_berkesan}"
-                          </p>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </ScrollArea>
-              )}
+              <div>
+                <h2 className="text-2xl font-bold text-foreground font-orbitron">
+                  Class Memories
+                </h2>
+                <p className="text-muted-foreground">
+                  A collection of our best moments together
+                </p>
+              </div>
             </div>
-          )}
+
+            {isLocked ? (
+              <div 
+                onClick={handleLockClick}
+                className={`
+                  bg-background/50 border border-border rounded-xl p-8 
+                  flex flex-col items-center justify-center text-center 
+                  cursor-pointer hover:bg-background/80 transition-all
+                  ${isShake ? 'animate-shake' : ''}
+                `}
+              >
+                <div className="bg-muted p-4 rounded-full mb-4">
+                  <Lock className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-xl font-bold text-foreground mb-2">Locked for Surprise! 🔒</h3>
+                <p className="text-muted-foreground max-w-md mx-auto">
+                  This wall contains everyone's best memories. It will be revealed on <span className="text-primary font-semibold">{unlockDate ? format(unlockDate, 'MMMM do, yyyy') : 'the special day'}</span>.
+                </p>
+                <p className="text-xs text-muted-foreground/60 mt-4">(Click the lock to check status)</p>
+              </div>
+            ) : publicMemories.length > 0 ? (
+              <ScrollArea className="h-[300px] pr-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  {publicMemories.map((memory) => (
+                    <Card key={memory.id} className="bg-background/50 border-border hover:bg-background/80 transition-colors">
+                      <CardContent className="p-4">
+                        <Quote className="w-4 h-4 text-primary mb-2 opacity-50" />
+                        <p className="text-foreground italic text-sm leading-relaxed">
+                          "{memory.momen_berkesan}"
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </ScrollArea>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                <p>No public memories have been shared yet.</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
