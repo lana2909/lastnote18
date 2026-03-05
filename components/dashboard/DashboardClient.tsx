@@ -31,6 +31,7 @@ interface Classmate {
   id: string;
   name: string;
   hasSent: boolean;
+  absentNumber: number;
 }
 
 interface DashboardClientProps {
@@ -245,7 +246,7 @@ export default function DashboardClient({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="bg-primary text-primary-foreground w-12 h-12 rounded-full flex items-center justify-center font-semibold group-hover:scale-110 transition-transform shadow-sm">
-                        {index + 1}
+                        {classmate.absentNumber}
                       </div>
                       <div>
                         <h3 className="text-foreground font-semibold group-hover:text-primary transition-colors">
