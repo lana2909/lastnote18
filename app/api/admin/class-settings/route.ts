@@ -7,7 +7,7 @@ import { supabaseServer } from '@/lib/supabase';
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
 
-  if (!session || session.user.role !== 'ADMIN') {
+  if (!session || session.user.role === 'SUBSCRIBER') {
     return new NextResponse('Unauthorized', { status: 401 });
   }
 

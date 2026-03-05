@@ -12,7 +12,7 @@ export default async function ClassesPage() {
     redirect('/login');
   }
 
-  if (session.user.role !== 'ADMIN') {
+  if (session.user.role === 'SUBSCRIBER') {
     redirect('/dashboard');
   }
 
