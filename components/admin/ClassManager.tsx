@@ -25,7 +25,8 @@ import {
 } from '@/components/ui/table';
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, FileUp, Users, Download, HelpCircle, AlertCircle } from 'lucide-react';
+import { ToastAction } from '@/components/ui/toast';
+import { Loader2, Upload, FileUp, Users, Download, HelpCircle, AlertCircle, Key, FileDown, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
@@ -146,14 +147,18 @@ export default function ClassManager({ initialMajors, adminName }: Props) {
       if (!response.ok) throw new Error(result.message || 'Import failed');
 
       toast({
-        title: 'Success',
-        description: result.message,
+        title: 'Import Successful',
+        description: `${result.message}. New students added.`,
+        action: (
+          <ToastAction altText="Update Credentials" onClick={() => handleUpdateCredentials(selectedClassId)}>
+            Update Creds
+          </ToastAction>
+        ),
       });
 
       setSelectedFile(null);
       setPreviewData([]);
-      setSelectedClassId(null);
-      // Ideally refresh users list or stats
+      // Keep dialog open or close? Maybe keep open to allow other actions.
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -162,6 +167,64 @@ export default function ClassManager({ initialMajors, adminName }: Props) {
       });
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleUpdateCredentials = async (classId: string) => {
+    try {
+      toast({ title: 'Updating...', description: 'Generating credentials for new users...' });
+      
+      const response = await fetch('/api/admin/update-credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ classId, force: false }), // Only missing tokens
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message);
+
+      toast({
+        title: 'Credentials Updated',
+        description: data.message,
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Update Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleExportCredentials = async (classId: string) => {
+    try {
+      toast({ title: 'Exporting...', description: 'Preparing Excel file...' });
+
+      const response = await fetch('/api/admin/export-credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ classId }),
+      });
+
+      if (!response.ok) throw new Error('Export failed');
+
+      // Download Blob
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Credentials_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      toast({ title: 'Export Complete', description: 'File downloaded.' });
+    } catch (error: any) {
+      toast({
+        title: 'Export Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -216,13 +279,46 @@ export default function ClassManager({ initialMajors, adminName }: Props) {
                         </DialogTrigger>
                         <DialogContent className="max-w-3xl">
                           <DialogHeader>
-                            <DialogTitle>Import Students to {cls.display_name}</DialogTitle>
+                            <DialogTitle>Manage {cls.display_name}</DialogTitle>
                             <DialogDescription>
-                              Add or update students using an Excel file.
+                              Import students, update credentials, or export data.
                             </DialogDescription>
                           </DialogHeader>
                           
-                          <div className="space-y-4 py-4">
+                          <div className="space-y-6 py-4">
+                            
+                            {/* Action Buttons */}
+                            <div className="grid grid-cols-2 gap-4">
+                              <Button 
+                                variant="outline" 
+                                className="h-auto py-4 flex flex-col gap-2"
+                                onClick={() => handleUpdateCredentials(cls.id)}
+                              >
+                                <RefreshCw className="w-6 h-6" />
+                                <div className="text-left">
+                                  <div className="font-semibold">Update Credentials</div>
+                                  <div className="text-xs text-muted-foreground font-normal">Generate tokens for new users</div>
+                                </div>
+                              </Button>
+
+                              <Button 
+                                variant="outline" 
+                                className="h-auto py-4 flex flex-col gap-2"
+                                onClick={() => handleExportCredentials(cls.id)}
+                              >
+                                <FileDown className="w-6 h-6" />
+                                <div className="text-left">
+                                  <div className="font-semibold">Export Credentials</div>
+                                  <div className="text-xs text-muted-foreground font-normal">Download Excel list</div>
+                                </div>
+                              </Button>
+                            </div>
+
+                            <div className="border-t border-border my-4" />
+
+                            <h3 className="font-semibold text-lg flex items-center gap-2">
+                              <Upload className="w-5 h-5" /> Import Data
+                            </h3>
                             
                             <Accordion type="single" collapsible className="w-full">
                               <AccordionItem value="item-1">
