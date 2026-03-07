@@ -1,26 +1,14 @@
 
 import './globals.css';
 import type { Metadata } from 'next';
-import { Inter, Orbitron } from 'next/font/google';
+// import { Inter, Orbitron } from 'next/font/google'; // Disabled to prevent build timeout
 import SessionProvider from '@/components/providers/SessionProvider';
 import { ClassThemeProvider } from '@/components/providers/ClassThemeProvider';
 import { Toaster } from '@/components/ui/toaster';
 
-// Configure fonts with fallback and adjust loading
-// If fetch fails during build on restricted networks, we can use a system font stack
-const inter = Inter({ 
-  subsets: ['latin'], 
-  variable: '--font-inter',
-  display: 'swap',
-  adjustFontFallback: false // Disable fallback adjustment to prevent some build errors
-});
-
-const orbitron = Orbitron({ 
-  subsets: ['latin'], 
-  variable: '--font-orbitron',
-  display: 'swap',
-  adjustFontFallback: false
-});
+// Fallback fonts
+// const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap', adjustFontFallback: false });
+// const orbitron = Orbitron({ subsets: ['latin'], variable: '--font-orbitron', display: 'swap', adjustFontFallback: false });
 
 export const metadata: Metadata = {
   title: 'One Last Note',
@@ -49,7 +37,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${orbitron.variable} font-sans`}>
+      {/* Removed font variables to fix build */}
+      <body className={`font-sans antialiased`}>
         <SessionProvider>
           <ClassThemeProvider>
             {children}

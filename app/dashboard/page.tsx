@@ -18,8 +18,9 @@ export default async function DashboardPage() {
   // 1. Fetch ALL Classmates (to calculate attendance number correctly)
   let query = supabase
     .from('users')
-    .select('id, name')
-    .order('name');
+    .select('id, name, absent_no')
+    .order('absent_no', { ascending: true, nullsFirst: false }) // Sort by absent_no first
+    .order('name'); // Then by name as fallback
 
   if (userClassId) {
     query = query.eq('class_id', userClassId);
@@ -35,11 +36,12 @@ export default async function DashboardPage() {
 
   const submittedIds = new Set(submissions?.map((s) => s.recipient_id) || []);
 
-  // 3. Process data: Assign absent number first, THEN filter out self
+  // 3. Process data: Use DB absent_no if available, else calculate based on sorted order
   const classmates = allClassmatesData
     ?.map((user, index) => ({
       ...user,
-      absentNumber: index + 1, // Assign absent number based on alphabetical order
+      // Use DB absent_no if exists, otherwise fallback to index + 1
+      absentNumber: user.absent_no || (index + 1),
       hasSent: submittedIds.has(user.id),
     }))
     .filter((user) => user.id !== session.user.id) || []; // Filter out self

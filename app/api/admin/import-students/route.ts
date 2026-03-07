@@ -29,8 +29,37 @@ export async function POST(req: Request) {
     // Default password hash
     const defaultPassword = await bcrypt.hash('12345678', 10);
 
+    // Sort students by absentNo ascending to handle shifts correctly if multiple insertions
+    // Actually, if we insert 26 then 27, it works. 
+    // If we insert 27 then 26: 
+    // Insert 27 (Shift 27+ -> 28+). 27 is now taken.
+    // Insert 26 (Shift 26+ -> 27+). The new 27 (was 26) moves to 28. The 28 (was 27) moves to 29.
+    // It seems safe regardless of order, but ascending is logical.
+    students.sort((a: any, b: any) => (a.absentNo || 0) - (b.absentNo || 0));
+
     for (const student of students) {
       try {
+        // 1. Handle Absent Number Shifting (Make Room)
+        if (student.absentNo) {
+          // Find users who need to move
+          const { data: conflicts } = await supabase
+            .from('users')
+            .select('id, absent_no')
+            .eq('class_id', classId)
+            .gte('absent_no', student.absentNo)
+            .order('absent_no', { ascending: false }); // Move from back to front to avoid collision if unique constraint exists
+
+          if (conflicts && conflicts.length > 0) {
+            // Shift them one by one (safe for small class sizes)
+            for (const u of conflicts) {
+              await supabase
+                .from('users')
+                .update({ absent_no: u.absent_no + 1 })
+                .eq('id', u.id);
+            }
+          }
+        }
+
         const username = student.name
           .toLowerCase()
           .replace(/[^a-z0-9]/g, '.')
@@ -38,9 +67,7 @@ export async function POST(req: Request) {
           .replace(/^\.+|\.+$/g, '');
 
         // Check if username exists, append random number if so? 
-        // For now, let's assume names are unique enough or let it fail and report.
-        // Actually, better to append a suffix if exists, but that's complex in a loop.
-        // Let's just try insert.
+        // ... (rest of logic)
 
         const { error } = await supabase.from('users').insert({
           name: student.name,

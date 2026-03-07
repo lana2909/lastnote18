@@ -25,8 +25,15 @@ import {
 } from '@/components/ui/table';
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, FileUp, Users } from 'lucide-react';
+import { Loader2, Upload, FileUp, Users, Download, HelpCircle, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
 interface Props {
   initialMajors: any[];
@@ -46,6 +53,18 @@ export default function ClassManager({ initialMajors, adminName }: Props) {
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
   const { toast } = useToast();
   const router = useRouter();
+
+  const handleDownloadTemplate = () => {
+    const data = [
+      { No: 1, Name: "John Doe" },
+      { No: 2, Name: "Jane Smith" },
+      { No: 26, Name: "Rahma Krisanda (Insert Example)" },
+    ];
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template");
+    XLSX.writeFile(wb, "Student_Import_Template.xlsx");
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -87,6 +106,15 @@ export default function ClassManager({ initialMajors, adminName }: Props) {
         }
 
         setPreviewData(students);
+        
+        if (students.length === 0) {
+          toast({
+            title: 'Invalid File',
+            description: 'No valid student data found. Ensure columns "No" and "Name" exist.',
+            variant: 'destructive',
+          });
+          setSelectedFile(null);
+        }
       } catch (error) {
         console.error('Error parsing file:', error);
         toast({
@@ -190,17 +218,54 @@ export default function ClassManager({ initialMajors, adminName }: Props) {
                           <DialogHeader>
                             <DialogTitle>Import Students to {cls.display_name}</DialogTitle>
                             <DialogDescription>
-                              Upload an Excel or CSV file with columns: No, Name.
+                              Add or update students using an Excel file.
                             </DialogDescription>
                           </DialogHeader>
                           
                           <div className="space-y-4 py-4">
-                            <div className="flex items-center gap-4">
-                              <Input 
-                                type="file" 
-                                accept=".xlsx, .xls, .csv"
-                                onChange={handleFileChange}
-                              />
+                            
+                            <Accordion type="single" collapsible className="w-full">
+                              <AccordionItem value="item-1">
+                                <AccordionTrigger className="text-sm font-medium">
+                                  <div className="flex items-center gap-2">
+                                    <HelpCircle className="w-4 h-4" />
+                                    How to Import & Rules
+                                  </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="text-sm text-muted-foreground space-y-2">
+                                  <p>1. <strong>Download Template</strong>: Use the button below to get the correct format.</p>
+                                  <p>2. <strong>Columns</strong>: The file must have <strong>No</strong> (Absent Number) and <strong>Name</strong> columns.</p>
+                                  <p>3. <strong>Insertion Logic</strong>: </p>
+                                  <ul className="list-disc pl-5 space-y-1">
+                                    <li>New students are inserted.</li>
+                                    <li>If you provide a specific <strong>No</strong> (e.g. 26), and it's already taken, the system will automatically <strong>SHIFT</strong> existing students down (26 &rarr; 27, 27 &rarr; 28) to make room.</li>
+                                    <li>Ensure your numbering is correct in the file.</li>
+                                  </ul>
+                                  <p>4. <strong>Validation</strong>: The system will reject files with missing required columns.</p>
+                                </AccordionContent>
+                              </AccordionItem>
+                            </Accordion>
+
+                            <div className="flex items-center justify-between gap-4 p-4 bg-muted/50 rounded-lg border border-border">
+                              <div>
+                                <Label className="text-sm font-semibold">1. Get Template</Label>
+                                <p className="text-xs text-muted-foreground">Start with a clean file</p>
+                              </div>
+                              <Button variant="outline" size="sm" onClick={handleDownloadTemplate}>
+                                <Download className="w-4 h-4 mr-2" />
+                                Download Template
+                              </Button>
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label className="text-sm font-semibold">2. Upload File</Label>
+                              <div className="flex items-center gap-4">
+                                <Input 
+                                  type="file" 
+                                  accept=".xlsx, .xls, .csv"
+                                  onChange={handleFileChange}
+                                />
+                              </div>
                             </div>
 
                             {previewData.length > 0 && (
