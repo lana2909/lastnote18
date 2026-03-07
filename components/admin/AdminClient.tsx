@@ -146,8 +146,8 @@ export default function AdminClient({
                 {isNavigating ? 'Loading...' : 'Back to Dashboard'}
               </Button>
 
-              {/* Manage Classes: Visible to ADMINISTRATOR and AUTHOR (Own class data) */}
-              {(role === 'ADMINISTRATOR' || role === 'AUTHOR') && (
+              {/* Manage Classes: Visible to ADMINISTRATOR, AUTHOR and EDITOR */}
+              {(role === 'ADMINISTRATOR' || role === 'AUTHOR' || role === 'EDITOR') && (
                 <Button
                   onClick={() => {
                     setIsNavigating(true);

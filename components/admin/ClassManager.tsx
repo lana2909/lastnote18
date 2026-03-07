@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -35,6 +34,16 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface Props {
   initialMajors: any[];
@@ -52,6 +61,8 @@ export default function ClassManager({ initialMajors, adminName }: Props) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewData, setPreviewData] = useState<StudentRow[]>([]);
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
+  const [lastUpdates, setLastUpdates] = useState<Record<string, number>>({});
+  const [confirmUpdateClassId, setConfirmUpdateClassId] = useState<string | null>(null);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -150,7 +161,7 @@ export default function ClassManager({ initialMajors, adminName }: Props) {
         title: 'Import Successful',
         description: `${result.message}. New students added.`,
         action: (
-          <ToastAction altText="Update Credentials" onClick={() => handleUpdateCredentials(selectedClassId)}>
+          <ToastAction altText="Update Credentials" onClick={() => handleUpdateClick(selectedClassId)}>
             Update Creds
           </ToastAction>
         ),
@@ -170,7 +181,29 @@ export default function ClassManager({ initialMajors, adminName }: Props) {
     }
   };
 
-  const handleUpdateCredentials = async (classId: string) => {
+  const handleUpdateClick = (classId: string) => {
+    const lastTime = lastUpdates[classId] || 0;
+    const now = Date.now();
+    const cooldown = 60000; // 60 seconds
+    
+    if (now - lastTime < cooldown) {
+      const remaining = Math.ceil((cooldown - (now - lastTime)) / 1000);
+      toast({
+        title: 'Please wait',
+        description: `You can update credentials again in ${remaining} seconds.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    setConfirmUpdateClassId(classId);
+  };
+
+  const handleUpdateCredentials = async () => {
+    if (!confirmUpdateClassId) return;
+    const classId = confirmUpdateClassId;
+    setConfirmUpdateClassId(null); // Close dialog
+
     try {
       toast({ title: 'Updating...', description: 'Generating credentials for new users...' });
       
@@ -182,6 +215,9 @@ export default function ClassManager({ initialMajors, adminName }: Props) {
 
       const data = await response.json();
       if (!response.ok) throw new Error(data.message);
+
+      // Update timestamp
+      setLastUpdates(prev => ({ ...prev, [classId]: Date.now() }));
 
       toast({
         title: 'Credentials Updated',
@@ -292,7 +328,7 @@ export default function ClassManager({ initialMajors, adminName }: Props) {
                               <Button 
                                 variant="outline" 
                                 className="h-auto py-4 flex flex-col gap-2"
-                                onClick={() => handleUpdateCredentials(cls.id)}
+                                onClick={() => handleUpdateClick(cls.id)}
                               >
                                 <RefreshCw className="w-6 h-6" />
                                 <div className="text-left">
@@ -417,6 +453,24 @@ export default function ClassManager({ initialMajors, adminName }: Props) {
           ))}
         </div>
       </div>
+      <AlertDialog open={!!confirmUpdateClassId} onOpenChange={(open) => !open && setConfirmUpdateClassId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Update Credentials?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will generate <strong>Claim Tokens</strong> for any students in this class who do not have one yet.
+              <br/><br/>
+              Existing tokens will <strong>NOT</strong> be changed unless you force it (currently disabled).
+              <br/><br/>
+              <span className="text-destructive font-semibold">Note:</span> Please do not spam this button. Wait at least 60 seconds between updates.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleUpdateCredentials}>Confirm Update</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
