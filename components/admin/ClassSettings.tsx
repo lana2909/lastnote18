@@ -25,9 +25,10 @@ interface ClassSettingsProps {
   classId: string;
   initialQuestions: Question[];
   initialUnlockDate: string | null;
+  role?: string;
 }
 
-export default function ClassSettings({ classId, initialQuestions, initialUnlockDate }: ClassSettingsProps) {
+export default function ClassSettings({ classId, initialQuestions, initialUnlockDate, role }: ClassSettingsProps) {
   const [questions, setQuestions] = useState<Question[]>(initialQuestions || []);
   const [unlockDate, setUnlockDate] = useState<Date | undefined>(
     initialUnlockDate ? new Date(initialUnlockDate) : undefined
