@@ -159,15 +159,15 @@ export default function ClaimPage() {
           </Alert>
 
           <Button 
-            className="w-full text-lg py-6 font-bold shadow-lg transition-all hover:scale-[1.02]" 
+            className="w-full text-lg py-6 font-bold shadow-lg transition-all hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed" 
             onClick={handleClaim}
             disabled={isLoading}
           >
             {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Verifying Token...
-              </>
+              <div className="flex items-center justify-center gap-2">
+                <Loader2 className="h-5 w-5 animate-spin text-primary-foreground" />
+                <span>Processing... Please wait</span>
+              </div>
             ) : (
               'Reveal My Credentials'
             )}
