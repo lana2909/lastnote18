@@ -224,7 +224,7 @@ export default function ClassSettings({ classId, initialQuestions, initialUnlock
       <div className="flex justify-end sticky bottom-6 z-10">
         <Button 
           onClick={handleSave} 
-          disabled={isSaving}
+          isLoading={isSaving}
           className="bg-primary text-primary-foreground shadow-lg hover:scale-105 transition-transform"
         >
           {isSaving ? (

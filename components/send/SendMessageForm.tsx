@@ -37,6 +37,7 @@ export default function SendMessageForm({
 }: SendMessageFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const [error, setError] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -180,7 +181,11 @@ export default function SendMessageForm({
                   <Menu className="w-4 h-4" />
                 </Button>
                 <Button
-                  onClick={() => router.back()}
+                  onClick={() => {
+                    setIsNavigating(true);
+                    router.push('/dashboard');
+                  }}
+                  disabled={isNavigating || isSubmitting}
                   variant="outline"
                   className="border-border text-foreground hover:bg-accent hover:text-accent-foreground rounded-xl"
                 >
@@ -192,24 +197,34 @@ export default function SendMessageForm({
               <div className="flex gap-2">
               {prevRecipientId && (
                 <Button
-                  onClick={() => router.push(`/send/${prevRecipientId}`)}
+                  onClick={() => {
+                    setIsNavigating(true);
+                    router.push(`/send/${prevRecipientId}`);
+                  }}
+                  isLoading={isNavigating}
+                  disabled={isNavigating || isSubmitting}
                   variant="outline"
                   className="border-border text-foreground hover:bg-accent hover:text-accent-foreground rounded-xl"
                   title="Previous Classmate"
                 >
-                  <ChevronLeft className="w-4 h-4 mr-2" />
-                  Prev
+                  {!isNavigating && <ChevronLeft className="w-4 h-4 mr-2" />}
+                  {isNavigating ? 'Loading...' : 'Prev'}
                 </Button>
               )}
               {nextRecipientId && (
                 <Button
-                  onClick={() => router.push(`/send/${nextRecipientId}`)}
+                  onClick={() => {
+                    setIsNavigating(true);
+                    router.push(`/send/${nextRecipientId}`);
+                  }}
+                  isLoading={isNavigating}
+                  disabled={isNavigating || isSubmitting}
                   variant="outline"
                   className="border-border text-foreground hover:bg-accent hover:text-accent-foreground rounded-xl"
                   title="Next Classmate"
                 >
-                  Next
-                  <ChevronRight className="w-4 h-4 ml-2" />
+                  {isNavigating ? 'Loading...' : 'Next'}
+                  {!isNavigating && <ChevronRight className="w-4 h-4 ml-2" />}
                 </Button>
               )}
             </div>

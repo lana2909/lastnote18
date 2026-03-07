@@ -18,6 +18,7 @@ import {
   Search,
   Quote,
   Lock,
+  Loader2,
 } from 'lucide-react';
 import { ChangePasswordDialog } from './ChangePasswordDialog';
 import { SentMessageDialog } from './SentMessageDialog';
@@ -57,6 +58,8 @@ export default function DashboardClient({
   const [unlockDate, setUnlockDate] = useState<Date | null>(null);
   const [isLocked, setIsLocked] = useState(true);
   const [isShake, setIsShake] = useState(false);
+  const [navigatingId, setNavigatingId] = useState<string | null>(null);
+  const [isNavigating, setIsNavigating] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -143,20 +146,28 @@ export default function DashboardClient({
               <div className="flex gap-2">
                 {user.isUnlocked && (
                   <Button
-                    onClick={() => router.push('/my-messages')}
+                    onClick={() => {
+                      setIsNavigating(true);
+                      router.push('/my-messages');
+                    }}
+                    isLoading={isNavigating}
                     className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl transition-all hover:scale-105 shadow-md"
                   >
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    My Messages
+                    {!isNavigating && <MessageSquare className="w-4 h-4 mr-2" />}
+                    {isNavigating ? 'Opening...' : 'My Messages'}
                   </Button>
                 )}
                 {user.role !== 'SUBSCRIBER' && (
                   <Button
-                    onClick={() => router.push('/admin')}
+                    onClick={() => {
+                      setIsNavigating(true);
+                      router.push('/admin');
+                    }}
+                    isLoading={isNavigating}
                     className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-xl transition-all hover:scale-105 shadow-md"
                   >
-                    <Shield className="w-4 h-4 mr-2" />
-                    Admin Panel
+                    {!isNavigating && <Shield className="w-4 h-4 mr-2" />}
+                    {isNavigating ? 'Opening...' : 'Admin Panel'}
                   </Button>
                 )}
                 <Button
@@ -236,13 +247,22 @@ export default function DashboardClient({
               {filteredClassmates.map((classmate, index) => (
                 <div
                   key={classmate.id}
-                  className="bg-card hover:bg-accent/50 border border-border rounded-xl p-4 transition-all hover:shadow-md hover:scale-[1.01] cursor-pointer group"
+                  className="bg-card hover:bg-accent/50 border border-border rounded-xl p-4 transition-all hover:shadow-md hover:scale-[1.01] cursor-pointer group relative overflow-hidden"
                   onClick={() => {
-                    if (!classmate.hasSent) {
+                    if (!classmate.hasSent && !navigatingId) {
+                      setNavigatingId(classmate.id);
                       router.push(`/send/${classmate.id}`);
                     }
                   }}
                 >
+                  {navigatingId === classmate.id && (
+                    <div className="absolute inset-0 bg-background/60 backdrop-blur-[1px] flex items-center justify-center z-10 transition-opacity duration-300">
+                      <div className="bg-primary text-primary-foreground px-4 py-2 rounded-full flex items-center gap-2 shadow-lg animate-in fade-in zoom-in">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span className="text-sm font-medium">Opening...</span>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="bg-primary text-primary-foreground w-12 h-12 rounded-full flex items-center justify-center font-semibold group-hover:scale-110 transition-transform shadow-sm">

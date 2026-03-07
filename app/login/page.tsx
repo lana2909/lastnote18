@@ -164,17 +164,10 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              disabled={isLoading}
+              isLoading={isLoading}
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-6 rounded-xl transition-all duration-300 hover:scale-105 shadow-md"
             >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Entering...
-                </>
-              ) : (
-                'Enter the Galaxy'
-              )}
+              {isLoading ? 'Entering...' : 'Enter the Galaxy'}
             </Button>
           </form>
         </div>

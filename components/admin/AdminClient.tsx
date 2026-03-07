@@ -90,6 +90,7 @@ export default function AdminClient({
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [showClassSettings, setShowClassSettings] = useState(false);
   const [switchingClass, setSwitchingClass] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const filteredMessages =
     selectedUserId === 'all'
@@ -133,23 +134,31 @@ export default function AdminClient({
           <div className="flex flex-wrap gap-2 mb-6 justify-between">
             <div className="flex flex-wrap gap-2">
               <Button
-                onClick={() => router.push('/dashboard')}
+                onClick={() => {
+                  setIsNavigating(true);
+                  router.push('/dashboard');
+                }}
+                isLoading={isNavigating}
                 variant="outline"
                 className="border-border text-foreground hover:bg-accent hover:text-accent-foreground rounded-xl"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Dashboard
+                {!isNavigating && <ArrowLeft className="w-4 h-4 mr-2" />}
+                {isNavigating ? 'Loading...' : 'Back to Dashboard'}
               </Button>
 
               {/* Manage Classes: Visible to ADMINISTRATOR and AUTHOR (Own class data) */}
               {(role === 'ADMINISTRATOR' || role === 'AUTHOR') && (
                 <Button
-                  onClick={() => router.push('/admin/classes')}
+                  onClick={() => {
+                    setIsNavigating(true);
+                    router.push('/admin/classes');
+                  }}
+                  isLoading={isNavigating}
                   variant="outline"
                   className="border-border text-foreground hover:bg-accent hover:text-accent-foreground rounded-xl"
                 >
-                  <Users className="w-4 h-4 mr-2" />
-                  Manage Students
+                  {!isNavigating && <Users className="w-4 h-4 mr-2" />}
+                  {isNavigating ? 'Opening...' : 'Manage Students'}
                 </Button>
               )}
 
