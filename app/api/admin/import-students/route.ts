@@ -39,6 +39,9 @@ export async function POST(req: Request) {
 
     for (const student of students) {
       try {
+        // Normalize name to UPPERCASE for consistency
+        const normalizedName = student.name ? student.name.trim().toUpperCase() : 'UNKNOWN';
+
         // 1. Handle Absent Number Shifting (Make Room)
         if (student.absentNo) {
           // Find users who need to move
@@ -60,7 +63,7 @@ export async function POST(req: Request) {
           }
         }
 
-        const username = student.name
+        const username = normalizedName
           .toLowerCase()
           .replace(/[^a-z0-9]/g, '.')
           .replace(/\.+/g, '.')
@@ -70,7 +73,7 @@ export async function POST(req: Request) {
         // ... (rest of logic)
 
         const { error } = await supabase.from('users').insert({
-          name: student.name,
+          name: normalizedName,
           username: username,
           password: defaultPassword,
           role: 'USER',
@@ -84,7 +87,7 @@ export async function POST(req: Request) {
              // Try with a suffix
              const suffix = Math.floor(Math.random() * 1000);
              const { error: retryError } = await supabase.from('users').insert({
-                name: student.name,
+                name: normalizedName,
                 username: `${username}.${suffix}`,
                 password: defaultPassword,
                 role: 'USER',
@@ -95,13 +98,13 @@ export async function POST(req: Request) {
              
              if (retryError) {
                results.failed++;
-               results.errors.push(`Failed to add ${student.name}: ${retryError.message}`);
+               results.errors.push(`Failed to add ${normalizedName}: ${retryError.message}`);
              } else {
                results.success++;
              }
           } else {
             results.failed++;
-            results.errors.push(`Failed to add ${student.name}: ${error.message}`);
+            results.errors.push(`Failed to add ${normalizedName}: ${error.message}`);
           }
         } else {
           results.success++;
