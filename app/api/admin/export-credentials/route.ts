@@ -9,7 +9,8 @@ export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.username || !['ADMINISTRATOR', 'EDITOR', 'AUTHOR'].includes(session.user.role)) {
+    // Only ADMINISTRATOR can export credentials
+    if (!session?.user?.username || session.user.role !== 'ADMINISTRATOR') {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 

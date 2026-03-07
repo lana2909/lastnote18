@@ -48,6 +48,7 @@ import {
 interface Props {
   initialMajors: any[];
   adminName: string;
+  role: string;
 }
 
 interface StudentRow {
@@ -55,7 +56,7 @@ interface StudentRow {
   absentNo: number;
 }
 
-export default function ClassManager({ initialMajors, adminName }: Props) {
+export default function ClassManager({ initialMajors, adminName, role }: Props) {
   const [majors, setMajors] = useState(initialMajors);
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -337,17 +338,19 @@ export default function ClassManager({ initialMajors, adminName }: Props) {
                                 </div>
                               </Button>
 
-                              <Button 
-                                variant="outline" 
-                                className="h-auto py-4 flex flex-col gap-2"
-                                onClick={() => handleExportCredentials(cls.id)}
-                              >
-                                <FileDown className="w-6 h-6" />
-                                <div className="text-left">
-                                  <div className="font-semibold">Export Credentials</div>
-                                  <div className="text-xs text-muted-foreground font-normal">Download Excel list</div>
-                                </div>
-                              </Button>
+                              {role === 'ADMINISTRATOR' && (
+                                <Button 
+                                  variant="outline" 
+                                  className="h-auto py-4 flex flex-col gap-2"
+                                  onClick={() => handleExportCredentials(cls.id)}
+                                >
+                                  <FileDown className="w-6 h-6" />
+                                  <div className="text-left">
+                                    <div className="font-semibold">Export Credentials</div>
+                                    <div className="text-xs text-muted-foreground font-normal">Download Excel list</div>
+                                  </div>
+                                </Button>
+                              )}
                             </div>
 
                             <div className="border-t border-border my-4" />

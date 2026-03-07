@@ -75,6 +75,7 @@ export default async function ClassesPage() {
     <ClassManager 
       initialMajors={filteredMajors} 
       adminName={session.user.name}
+      role={session.user.role}
     />
   );
 }
